@@ -1,0 +1,39 @@
+package com.prueba.game.utilities;
+
+import com.badlogic.gdx.math.Vector2;
+
+public final class Constants
+{
+    private Constants()
+    {
+    }
+
+
+
+    public static final float PPM = 100; //pixel por metro
+
+    //public static final float ARO_RADIO = 0.229f; //en metros
+    public static final float ARO_RADIO = 0.229f; //en metros
+    public static final float ARO_Y = 3.05f; // en metros
+    public static final float ARO_X = 9f; //en metros
+    public static final float ARO_SEMIGROSOR = 0.02f; // en metros
+
+    public static final float TABLERO_ALTO = 1f; //en metros
+    public static final Vector2 TABLERO_POS = //relativa al body (el aro)
+            new Vector2(ARO_RADIO*2, TABLERO_ALTO/2-ARO_RADIO/2);
+
+    public static final float PISO_ALTURA = 0.5f; //en metros
+    public static final float TECHO_ALTURA = 8f;  //en metros
+
+    public static final float PELOTA_RADIO = 0.12f; //en metros
+    public static final float PELOTA_RESTITUCION = 0.65f;
+    public static final float PELOTA_MASA = 0.62f; //en kg
+    public static final Vector2 PELOTA_SPAWN = new Vector2(2, 5);
+
+    public static final Vector2 PLAYER_SPAWN = new Vector2(2, 1);
+    public static final float PLAYER_WIDTH = 0.4f;
+    public static final float PLAYER_HEIGHT = 0.6f;
+
+    public static final float BULLET_RADIUS = 0.1f;
+    public static final Vector2 BULLET_OFFSET = new Vector2(PLAYER_WIDTH, PLAYER_HEIGHT/2);
+}
