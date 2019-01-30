@@ -11,6 +11,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.physics.box2d.joints.RevoluteJoint;
+import com.badlogic.gdx.physics.box2d.joints.RevoluteJointDef;
 import com.badlogic.gdx.physics.box2d.joints.RopeJoint;
 import com.badlogic.gdx.physics.box2d.joints.RopeJointDef;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -36,8 +38,10 @@ public class Screen2 extends ScreenBase
     private Body ball;
     private Body block;
     private Body player;
+    private Body legs;
     private Body bullet;
 
+    private RevoluteJoint hip;
     private RopeJoint rope;
 
     private Sprite ballSprite;
@@ -232,7 +236,7 @@ public class Screen2 extends ScreenBase
         RopeJointDef jdef = new RopeJointDef();
         jdef.bodyA = player;
         jdef.bodyB = ceil;
-        jdef.localAnchorA.set(0, 0);
+        jdef.localAnchorA.set(Constants.ROPE_ANCHOR);
         jdef.localAnchorB.set(ceil.getLocalPoint(anchor));
         jdef.collideConnected = true;
         jdef.maxLength = player.getPosition().dst(anchor);
@@ -258,6 +262,7 @@ public class Screen2 extends ScreenBase
             BodyDef bodyDef = new BodyDef();
             bodyDef.type = BodyDef.BodyType.DynamicBody;
             bodyDef.position.set(Constants.PLAYER_SPAWN);
+            bodyDef.fixedRotation = true;
             player = world.createBody(bodyDef);
             PolygonShape shape = new PolygonShape();
             shape.setAsBox(Constants.PLAYER_WIDTH/2, Constants.PLAYER_HEIGHT/2);
@@ -266,6 +271,33 @@ public class Screen2 extends ScreenBase
             fixDef.density = 1f;
             player.createFixture(fixDef);
             shape.dispose();
+
+            bodyDef = new BodyDef();
+            bodyDef.type = BodyDef.BodyType.DynamicBody;
+            bodyDef.position.set(Constants.LEGS_SPAWN);
+            legs = world.createBody(bodyDef);
+            shape = new PolygonShape();
+            shape.setAsBox(Constants.LEGS_WIDTH/2, Constants.LEGS_HEIGHT/2);
+            fixDef = new FixtureDef();
+            fixDef.shape = shape;
+            fixDef.density = 1f;
+            legs.createFixture(fixDef);
+            shape.dispose();
+
+            RevoluteJointDef jointDef = new RevoluteJointDef();
+            jointDef.bodyA = player;
+            jointDef.bodyB = legs;
+            jointDef.enableMotor = true;
+            jointDef.maxMotorTorque = 1000f;
+            jointDef.enableLimit = true;
+            jointDef.upperAngle = MathUtils.PI / 2;
+            jointDef.lowerAngle = -MathUtils.PI / 2;
+            jointDef.localAnchorA.set(0, -Constants.PLAYER_HEIGHT/2);
+            jointDef.localAnchorB.set(0, Constants.LEGS_HEIGHT/2);
+
+            hip = (RevoluteJoint)world.createJoint(jointDef);
+            hip.enableMotor(true);
+            hip.setMotorSpeed(0f);
         }
     }
 
@@ -318,13 +350,17 @@ public class Screen2 extends ScreenBase
     {
         OrthographicCamera cam = (OrthographicCamera) viewport.getCamera();
 
+        float motorSpeed = 0f;
+
         if(Gdx.input.isKeyPressed(Input.Keys.LEFT))
         {
-            player.applyLinearImpulse(new Vector2(-0.1f, 0), player.getPosition(), true);
+//            player.applyLinearImpulse(new Vector2(-0.1f, 0), player.getPosition(), true);
+            motorSpeed = -15f;
         }
         if(Gdx.input.isKeyPressed(Input.Keys.RIGHT))
         {
-            player.applyLinearImpulse(new Vector2(0.1f, 0), player.getPosition(), true);
+//            player.applyLinearImpulse(new Vector2(0.1f, 0), player.getPosition(), true);
+            motorSpeed = 15f;
         }
         if(Gdx.input.isKeyPressed(Input.Keys.UP))
         {
@@ -350,6 +386,8 @@ public class Screen2 extends ScreenBase
         {
             cam.zoom += 0.2f;
         }
+
+        hip.setMotorSpeed(motorSpeed);
     }
 
     @Override

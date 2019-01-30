@@ -8,7 +8,8 @@ public final class Constants
     {
     }
 
-
+    public static final int PORT = 50505;
+    public static final String HOST = "localhost";
 
     public static final float PPM = 100; //pixel por metro
 
@@ -28,11 +29,16 @@ public final class Constants
     public static final float PELOTA_RADIO = 0.12f; //en metros
     public static final float PELOTA_RESTITUCION = 0.65f;
     public static final float PELOTA_MASA = 0.62f; //en kg
-    public static final Vector2 PELOTA_SPAWN = new Vector2(2, 5);
+    public static final Vector2 PELOTA_SPAWN = new Vector2(2f, 5f);
 
-    public static final Vector2 PLAYER_SPAWN = new Vector2(2, 1);
+    public static final Vector2 PLAYER_SPAWN = new Vector2(1.6f, 1f);
     public static final float PLAYER_WIDTH = 0.4f;
     public static final float PLAYER_HEIGHT = 0.6f;
+    public static final Vector2 ROPE_ANCHOR = new Vector2(0, PLAYER_HEIGHT / 2);
+
+    public static final float LEGS_WIDTH = 0.3f;
+    public static final float LEGS_HEIGHT = 0.4f;
+    public static final Vector2 LEGS_SPAWN = PLAYER_SPAWN.cpy().add(0, -LEGS_HEIGHT/2);
 
     public static final float BULLET_RADIUS = 0.1f;
     public static final Vector2 BULLET_OFFSET = new Vector2(PLAYER_WIDTH, PLAYER_HEIGHT/2);

@@ -1,6 +1,9 @@
 package com.prueba.game;
 
-import com.badlogic.gdx.*;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputMultiplexer;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -9,12 +12,18 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.prueba.game.utilities.Constants;
+import com.prueba.game.utilities.Events;
 import com.prueba.game.utilities.Hud;
 import com.prueba.game.utilities.PruebaContactListener;
+import io.socket.client.IO;
+import io.socket.client.Socket;
+
+import java.net.URISyntaxException;
 
 import static com.prueba.game.utilities.Constants.PPM;
 
@@ -42,6 +51,8 @@ public class Screen extends ScreenBase implements InputProcessor
     private boolean charging = false;
     private int goals;
 
+    private Socket socket;
+
     public Screen(PruebaGame pruebaGame, SpriteBatch batch)
     {
         this.batch = batch;
@@ -51,6 +62,38 @@ public class Screen extends ScreenBase implements InputProcessor
     @Override
     public void show()
     {
+        try
+        {
+            socket = IO.socket("http://localhost:" + Constants.PORT);
+            socket.on(Socket.EVENT_CONNECT, args -> {
+                Gdx.app.log("socket", "connected with Id: " + socket.id());
+                socket.emit(Events.MYID.name(), socket.id());
+            });
+
+            socket.on(Events.SHOT.name(), args -> {
+                //viene el id (string)
+                // y luego shot data (json/string)
+                String id = (String) args[0];
+//                Gdx.app.log("socket", "tiro event de Id " + id + ", shot data: " + args[1]);
+
+                if(!id.equals(socket.id())) //si son datos de otro usuario
+                {
+                    ShotData data = new Json().fromJson(ShotData.class, (String)args[1]);
+
+                    ball.setTransform(data.getPosition(), ball.getAngle());
+                    ball.setLinearVelocity(data.getVelocity());
+                    makeShot(data.getForce(), false);
+                }
+            });
+
+            Gdx.app.log("socket", "connecting to server");
+            socket.connect();
+        }
+        catch (URISyntaxException e)
+        {
+            e.printStackTrace();
+        }
+
         timeClickStart = 0L;
         goals = 0;
 
@@ -288,12 +331,26 @@ public class Screen extends ScreenBase implements InputProcessor
         }
     }
 
+    private void sendMessage(String message)
+    {
+//        try(OutputStream out = socket.getOutputStream())
+//        {
+//            out.write(message.getBytes());
+//        }
+//        catch (IOException e)
+//        {
+//            e.printStackTrace();
+//        }
+    }
+
     @Override
     public void dispose ()
     {
+        Gdx.app.log("screen", "disposing screen");
         world.dispose();
         debugRenderer.dispose();
         hud.stage.dispose();
+        socket.disconnect();
     }
 
     @Override
@@ -353,13 +410,29 @@ public class Screen extends ScreenBase implements InputProcessor
 
             //fuerza proporcional al tiempo que esté presionado el botón
             //se aplica cuando se suelta
-            ball.applyForceToCenter(forceDir.scl(intervalo*0.3f), true);
-
+            makeShot(getForce(intervalo), true);
             charging = false;
-
             return false;
         }
         return false;
+    }
+
+    private Vector2 getForce(long intervalo)
+    {
+        return forceDir.scl(intervalo*0.3f);
+    }
+
+    private void makeShot(Vector2 force, boolean emit)
+    {
+        ball.applyForceToCenter(force, true);
+
+        if(emit)
+        {
+            ShotData data = new ShotData(force, ball.getPosition(), ball.getLinearVelocity());
+            Json json = new Json();
+//            Gdx.app.log("socket", "enviando: " + json.toJson(data));
+            socket.emit(Events.SHOT.name(), json.toJson(data));
+        }
     }
 
     @Override

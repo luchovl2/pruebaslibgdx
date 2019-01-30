@@ -59,7 +59,13 @@ project(":core") {
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
         compile "com.badlogicgames.ashley:ashley:1.7.0"
-        
+        compile "io.socket:socket.io-client:1.0.0"
+        // https://mvnrepository.com/artifact/com.corundumstudio.socketio/netty-socketio
+        compile group: 'com.corundumstudio.socketio', name: 'netty-socketio', version: '1.7.7'
+        // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
+        compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.22'
+
+
     }
 }
 
