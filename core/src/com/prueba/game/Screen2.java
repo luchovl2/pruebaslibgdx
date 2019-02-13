@@ -40,6 +40,7 @@ public class Screen2 extends ScreenBase
     private Body player;
     private Body legs;
     private Body bullet;
+    private Body platform;
 
     private RevoluteJoint hip;
     private RopeJoint rope;
@@ -71,7 +72,7 @@ public class Screen2 extends ScreenBase
 
         viewport = new FitViewport(width/PPM, height/PPM, new OrthographicCamera());
         OrthographicCamera cam = (OrthographicCamera)viewport.getCamera();
-        cam.zoom += 0.4f;
+        cam.zoom += 1.4f;
 
         hud = new Hud(this, batch);
 
@@ -105,7 +106,8 @@ public class Screen2 extends ScreenBase
                 10, 0,
                 12, -0.2f,
                 15, 0.1f,
-                20, 6
+                20, 2,
+                35, 2
         };
         chain.createChain(points);
         fixDef.shape = chain;
@@ -123,7 +125,10 @@ public class Screen2 extends ScreenBase
                 10, 0,
                 12, -0.2f,
                 15, 0.1f,
-                20, 1.6f
+                20, 1.6f,
+                22, 10,
+                26, 14,
+                35, 12
         };
         chain.createChain(points2);
         fixDef.shape = chain;
@@ -172,6 +177,50 @@ public class Screen2 extends ScreenBase
         shape2.dispose();
 
         createPlayer();
+
+        //creando plataforma
+        bodyDef = new BodyDef();
+        bodyDef.type = BodyDef.BodyType.DynamicBody;
+        bodyDef.position.set(new Vector2(23f, 4f));
+        bodyDef.fixedRotation = true;
+        Body pivot = world.createBody(bodyDef);
+        shape = new CircleShape();
+        shape.setRadius(0.05f);
+        fixDef = new FixtureDef();
+        fixDef.shape = shape;
+        pivot.createFixture(fixDef);
+        shape.dispose();
+
+        bodyDef = new BodyDef();
+        bodyDef.type = BodyDef.BodyType.DynamicBody;
+        bodyDef.position.set(new Vector2(23f, 4f));
+//        bodyDef.fixedRotation = true;
+        platform = world.createBody(bodyDef);
+        shape2 = new PolygonShape();
+        shape2.setAsBox(0.7f, 0.1f);
+        fixDef = new FixtureDef();
+        fixDef.shape = shape2;
+        fixDef.density = 1f;
+        platform.createFixture(fixDef);
+        shape2.dispose();
+
+        RopeJointDef ropeDef = new RopeJointDef();
+        ropeDef.bodyA = ceil;
+        ropeDef.bodyB = pivot;
+        ropeDef.localAnchorA.set(new Vector2(25f, 14f));
+        ropeDef.localAnchorB.set(new Vector2(0, 0));
+        ropeDef.maxLength = platform.getPosition().dst(ropeDef.localAnchorA);
+        world.createJoint(ropeDef);
+
+        RevoluteJointDef revDef = new RevoluteJointDef();
+        revDef.bodyA = pivot;
+        revDef.bodyB = platform;
+        revDef.localAnchorA.set(new Vector2(0, 0));
+        revDef.localAnchorB.set(new Vector2(0, 0));
+        revDef.maxMotorTorque = 1f;
+        revDef.motorSpeed = 0f;
+        revDef.enableMotor = true;
+        world.createJoint(revDef);
     }
 
     @Override
@@ -220,7 +269,11 @@ public class Screen2 extends ScreenBase
 
         float camY = viewport.getCamera().position.y;
         float camZ = viewport.getCamera().position.z;
-        viewport.getCamera().position.set(player.getPosition().x, camY, camZ);
+//        viewport.getCamera().position.set(player.getPosition().x, camY, camZ);
+        viewport.getCamera().position.set(
+                                    player.getPosition().x,
+                                    player.getPosition().y,
+                                    camZ);
     }
 
     public void strapPlayerLater(Vector2 point)
@@ -337,7 +390,7 @@ public class Screen2 extends ScreenBase
     @Override
     public void switchScreen()
     {
-        pruebaGame.switchToScreen();
+        pruebaGame.switchToScreen3();
     }
 
     @Override
@@ -354,13 +407,25 @@ public class Screen2 extends ScreenBase
 
         if(Gdx.input.isKeyPressed(Input.Keys.LEFT))
         {
-//            player.applyLinearImpulse(new Vector2(-0.1f, 0), player.getPosition(), true);
-            motorSpeed = -15f;
+            if(isStrapped)
+            {
+                motorSpeed = -15f;
+            }
+            else
+            {
+                player.applyLinearImpulse(new Vector2(-0.1f, 0), player.getPosition(), true);
+            }
         }
         if(Gdx.input.isKeyPressed(Input.Keys.RIGHT))
         {
-//            player.applyLinearImpulse(new Vector2(0.1f, 0), player.getPosition(), true);
-            motorSpeed = 15f;
+            if(isStrapped)
+            {
+                motorSpeed = 15f;
+            }
+            else
+            {
+                player.applyLinearImpulse(new Vector2(0.1f, 0), player.getPosition(), true);
+            }
         }
         if(Gdx.input.isKeyPressed(Input.Keys.UP))
         {

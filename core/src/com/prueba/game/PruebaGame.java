@@ -50,6 +50,13 @@ public class PruebaGame extends Game
 		this.setScreen(currScreen);
 	}
 
+	public void switchToScreen3()
+	{
+		currScreen.dispose();
+		currScreen = new Screen3(this, batch);
+		this.setScreen(currScreen);
+	}
+
 	@Override
 	public void dispose()
 	{
